@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statefulset-scaledown-controller
+  labels:
+    app: statefulset-scaledown-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statefulset-scaledown-controller
+  template:
+    metadata:
+      labels:
+        app: statefulset-scaledown-controller
+    spec:
+      serviceAccountName: statefulset-scaledown-controller
+      containers:
+      - name: main
+        image: docker.io/luksa/statefulset-scaledown-controller:0.6
+        args:
+        - --localOnly
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: statefulset-scaledown-controller
+  labels:
+    app: statefulset-scaledown-controller
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: statefulset-scaledown-controller
+  labels:
+    app: statefulset-scaledown-controller
+subjects:
+  - kind: ServiceAccount
+    name: statefulset-scaledown-controller
+roleRef:
+  kind: Role
+  name: statefulset-scaledown-controller
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: statefulset-scaledown-controller
+  labels:
+    app: statefulset-scaledown-controller
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - get
+  - list
+  - watch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
